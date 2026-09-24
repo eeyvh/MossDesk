@@ -1,8 +1,8 @@
 /* Mossdesk — Design tokens & styles
-   Calm, human, intentional. No AI defaults. */
+   Calm, human, intentional. With dark mode. */
 
 :root {
-  /* Color system — warm linen + muted sage */
+  /* Light theme (default) */
   --bg: #F4F1EC;
   --surface: #FFFBF7;
   --surface-elevated: #FFFFFF;
@@ -18,12 +18,10 @@
   --shadow-soft: 0 1px 3px rgba(42, 40, 37, 0.04), 0 4px 12px rgba(42, 40, 37, 0.03);
   --shadow-lift: 0 4px 20px rgba(42, 40, 37, 0.06);
 
-  /* Typography */
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-body: "Source Sans 3", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  /* Spacing scale */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -33,13 +31,49 @@
   --space-7: 3rem;
   --space-8: 4rem;
 
-  /* Radii — soft but not bubbly */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
 
-  /* Transitions */
   --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --bg: #1C1B19;
+  --surface: #252320;
+  --surface-elevated: #2E2C29;
+  --text: #F0EDE8;
+  --text-muted: #A09A92;
+  --accent: #7A9A88;
+  --accent-hover: #8FAE9C;
+  --accent-soft: #2A332E;
+  --border: #3A3732;
+  --border-strong: #4A4640;
+  --danger: #C47A6C;
+  --danger-soft: #3A2A26;
+  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-lift: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Respect system preference if no manual choice yet */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1C1B19;
+    --surface: #252320;
+    --surface-elevated: #2E2C29;
+    --text: #F0EDE8;
+    --text-muted: #A09A92;
+    --accent: #7A9A88;
+    --accent-hover: #8FAE9C;
+    --accent-soft: #2A332E;
+    --border: #3A3732;
+    --border-strong: #4A4640;
+    --danger: #C47A6C;
+    --danger-soft: #3A2A26;
+    --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+    --shadow-lift: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
 }
 
 *,
@@ -62,6 +96,7 @@ body {
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
+  transition: background 0.25s var(--ease), color 0.25s var(--ease);
 }
 
 /* ---------- Landing page ---------- */
@@ -92,16 +127,46 @@ body {
   color: var(--accent);
 }
 
+.landing-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
 .landing-nav a {
   color: var(--text-muted);
   text-decoration: none;
   font-size: 0.95rem;
-  margin-left: var(--space-5);
   transition: color 0.2s var(--ease);
 }
 
 .landing-nav a:hover {
   color: var(--text);
+}
+
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--surface-elevated);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.15s var(--ease);
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
 }
 
 .hero {
@@ -256,7 +321,6 @@ body {
   overflow: hidden;
 }
 
-/* Sidebar */
 .sidebar {
   background: var(--surface);
   border-right: 1px solid var(--border);
@@ -407,7 +471,6 @@ body {
   font-size: 0.85rem;
 }
 
-/* Editor area */
 .editor-area {
   display: flex;
   flex-direction: column;
@@ -433,6 +496,7 @@ body {
 .editor-actions {
   display: flex;
   gap: var(--space-2);
+  align-items: center;
 }
 
 .editor-body {
@@ -508,7 +572,6 @@ body {
   line-height: 1.55;
 }
 
-/* Privacy note */
 .privacy-badge {
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -567,7 +630,6 @@ body {
   display: none;
 }
 
-/* Overlay for mobile sidebar */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -576,11 +638,14 @@ body {
   z-index: 99;
 }
 
+[data-theme="dark"] .sidebar-overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
 .sidebar-overlay.visible {
   display: block;
 }
 
-/* Utility */
 .sr-only {
   position: absolute;
   width: 1px;
