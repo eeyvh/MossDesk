@@ -80,10 +80,8 @@ Then visit the URL shown.
 mossdesk/
 ├── index.html      # Landing page
 ├── app.html        # The notes application
-├── css/
-│   └── styles.css  # All design tokens and styles
-├── js/
-│   └── app.js      # Local-first logic (localStorage)
+├── styles.css  # All design tokens and styles
+├── app.js      # Local-first logic (localStorage)
 └── README.md
 ```
 
