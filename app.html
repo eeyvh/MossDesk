@@ -8,7 +8,7 @@
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&family=Lora:wght@400;600&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -29,13 +29,7 @@
 
       <div class="search-wrap">
         <label for="search-input" class="sr-only">Search notes</label>
-        <input
-          id="search-input"
-          class="search-input"
-          type="search"
-          placeholder="Search notes…"
-          autocomplete="off"
-        />
+        <input id="search-input" class="search-input" type="search" placeholder="Search notes…" autocomplete="off" />
       </div>
 
       <div id="notes-list" class="notes-list" role="list"></div>
@@ -57,6 +51,11 @@
         <div class="privacy-badge">Local only</div>
 
         <div class="editor-actions">
+          <button id="btn-ai" class="btn-icon" title="AI assistant" aria-label="Open AI assistant">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+            </svg>
+          </button>
           <button class="theme-toggle" data-theme-toggle title="Toggle dark mode" aria-label="Toggle dark mode">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
@@ -74,18 +73,91 @@
       <div id="editor-empty" class="empty-editor">
         <h2>Your desk is clear</h2>
         <p>Create a note when something arrives. Everything stays on this device.</p>
-        <button id="btn-new-empty" class="btn btn-primary" onclick="document.getElementById('btn-new').click()">
-          Write a note
-        </button>
+        <button id="btn-new-empty" class="btn btn-primary" onclick="document.getElementById('btn-new').click()">Write a note</button>
       </div>
 
       <div id="editor-form" class="editor-body" hidden>
         <label for="note-title" class="sr-only">Note title</label>
         <input id="note-title" class="note-title-input" type="text" placeholder="Title" autocomplete="off" />
-        <label for="note-content" class="sr-only">Note content</label>
-        <textarea id="note-content" class="note-content" placeholder="Start writing…" spellcheck="true"></textarea>
+
+        <!-- Formatting toolbar -->
+        <div class="format-bar" role="toolbar" aria-label="Text formatting">
+          <select id="font-select" class="format-select" title="Font">
+            <option value="Source Sans 3, system-ui, sans-serif">Source Sans</option>
+            <option value="Fraunces, Georgia, serif">Fraunces</option>
+            <option value="Lora, Georgia, serif">Lora</option>
+            <option value="Merriweather, Georgia, serif">Merriweather</option>
+            <option value="Playfair Display, Georgia, serif">Playfair</option>
+            <option value="IBM Plex Sans, system-ui, sans-serif">IBM Plex</option>
+            <option value="Space Grotesk, system-ui, sans-serif">Space Grotesk</option>
+            <option value="Georgia, serif">Georgia</option>
+          </select>
+
+          <input type="color" id="color-picker" class="format-color" value="#2A2825" title="Text color" />
+
+          <button type="button" id="btn-bold" class="format-btn" title="Bold (⌘B)" aria-label="Bold"><strong>B</strong></button>
+          <button type="button" id="btn-italic" class="format-btn" title="Italic (⌘I)" aria-label="Italic"><em>I</em></button>
+
+          <span class="format-sep"></span>
+
+          <button type="button" id="btn-mic" class="format-btn format-btn-mic" title="Dictate with microphone" aria-label="Start dictation">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+            </svg>
+            <span id="mic-label">Dictate</span>
+          </button>
+        </div>
+
+        <div
+          id="note-content"
+          class="note-content"
+          contenteditable="true"
+          role="textbox"
+          aria-multiline="true"
+          aria-label="Note content"
+          data-placeholder="Start writing…"
+        ></div>
       </div>
     </main>
+
+    <!-- AI Assistant panel -->
+    <aside id="ai-panel" class="ai-panel" aria-hidden="true">
+      <div class="ai-panel-header">
+        <div>
+          <h2 class="ai-panel-title">Assistant</h2>
+          <p class="ai-panel-sub">Ask questions or research your note</p>
+        </div>
+        <button id="ai-close" class="btn-icon" aria-label="Close assistant">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="ai-quick">
+        <button type="button" class="ai-chip" data-prompt="Summarize the main ideas in my current note.">Summarize note</button>
+        <button type="button" class="ai-chip" data-prompt="Suggest how I can improve clarity and structure in what I wrote.">Improve writing</button>
+        <button type="button" class="ai-chip" data-prompt="Research and explain key concepts related to what I am writing about.">Research topic</button>
+        <button type="button" class="ai-chip" data-prompt="List questions I still need to answer about this topic.">Open questions</button>
+      </div>
+
+      <div id="ai-messages" class="ai-messages"></div>
+
+      <div class="ai-input-row">
+        <textarea id="ai-input" class="ai-input" rows="2" placeholder="Ask about your note…" ></textarea>
+        <div class="ai-input-actions">
+          <button type="button" id="ai-mic" class="btn-icon" title="Speak to assistant" aria-label="Speak to assistant">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+            </svg>
+          </button>
+          <button type="button" id="ai-send" class="btn btn-primary ai-send">Send</button>
+        </div>
+      </div>
+
+      <p class="ai-privacy-note">Voice stays in the browser when possible. Optional AI replies use only what you type here — your full notes are not uploaded unless you ask.</p>
+    </aside>
+    <div id="ai-overlay" class="ai-overlay" hidden></div>
   </div>
 
   <script src="app.js"></script>
