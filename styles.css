@@ -2,7 +2,6 @@
    Calm, human, intentional. With dark mode. */
 
 :root {
-  /* Light theme (default) */
   --bg: #F4F1EC;
   --surface: #FFFBF7;
   --surface-elevated: #FFFFFF;
@@ -34,11 +33,9 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
-
   --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* Dark theme */
 [data-theme="dark"] {
   --bg: #1C1B19;
   --surface: #252320;
@@ -56,7 +53,6 @@
   --shadow-lift: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
-/* Respect system preference if no manual choice yet */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #1C1B19;
@@ -105,25 +101,22 @@ body {
   display: block;
   height: 40px;
   width: auto;
+  max-width: 160px;
 }
 
 .logo-img--sm {
   height: 32px;
+  max-width: 130px;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-}
-
+.logo,
 .sidebar-logo {
   display: flex;
   align-items: center;
   text-decoration: none;
 }
 
-/* ---------- Landing page ---------- */
+/* ---------- Landing header ---------- */
 
 .landing {
   min-height: 100vh;
@@ -132,26 +125,44 @@ body {
 }
 
 .landing-header {
-  padding: var(--space-5) var(--space-6);
-  display: flex;
-  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
   align-items: center;
+  gap: var(--space-3);
+  position: relative;
 }
 
-.landing-nav {
+.landing-header .logo {
+  justify-self: center;
+}
+
+.header-menu-btn {
+  justify-self: start;
+}
+
+.header-right {
+  justify-self: end;
   display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.desktop-nav {
+  display: none;
   align-items: center;
   gap: var(--space-4);
 }
 
-.landing-nav a {
+.desktop-nav a {
   color: var(--text-muted);
   text-decoration: none;
   font-size: 0.95rem;
   transition: color 0.2s var(--ease);
+  white-space: nowrap;
 }
 
-.landing-nav a:hover {
+.desktop-nav a:hover {
   color: var(--text);
 }
 
@@ -167,6 +178,7 @@ body {
   cursor: pointer;
   color: var(--text-muted);
   transition: all 0.15s var(--ease);
+  flex-shrink: 0;
 }
 
 .theme-toggle:hover {
@@ -179,6 +191,109 @@ body {
   width: 18px;
   height: 18px;
 }
+
+/* Side nav (mobile menu) */
+
+.nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 40, 37, 0.35);
+  z-index: 200;
+  opacity: 0;
+  transition: opacity 0.25s var(--ease);
+}
+
+.nav-overlay.visible {
+  opacity: 1;
+}
+
+[data-theme="dark"] .nav-overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.side-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 85vw;
+  background: var(--surface);
+  z-index: 210;
+  transform: translateX(-100%);
+  transition: transform 0.25s var(--ease);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lift);
+}
+
+.side-nav.open {
+  transform: translateX(0);
+}
+
+.side-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.side-nav-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.side-nav-links {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.side-nav-link {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 1.05rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: background 0.15s var(--ease);
+}
+
+.side-nav-link:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Desktop header layout */
+@media (min-width: 801px) {
+  .landing-header {
+    grid-template-columns: 1fr auto 1fr;
+    padding: var(--space-5) var(--space-6);
+  }
+
+  .header-menu-btn {
+    display: none;
+  }
+
+  .landing-header .logo {
+    justify-self: start;
+  }
+
+  .header-right {
+    justify-self: end;
+  }
+
+  .desktop-nav {
+    display: flex;
+  }
+}
+
+/* ---------- Hero ---------- */
 
 .hero {
   flex: 1;
