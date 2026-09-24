@@ -324,4 +324,37 @@
   } else {
     init();
   }
-})();
+  // ---------- Theme toggle ----------
+  function initTheme() {
+    const stored = localStorage.getItem("mossdesk-theme");
+    if (stored === "dark" || stored === "light") {
+      document.documentElement.setAttribute("data-theme", stored);
+    }
+    // else: let prefers-color-scheme handle it
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute("data-theme");
+    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    let next;
+
+    if (current === "dark") {
+      next = "light";
+    } else if (current === "light") {
+      next = "dark";
+    } else {
+      // No explicit choice yet → opposite of system
+      next = systemDark ? "light" : "dark";
+    }
+
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("mossdesk-theme", next);
+  }
+
+  // Call on load
+  initTheme();
+
+  // Bind toggle buttons (both landing and app)
+  document.querySelectorAll("[data-theme-toggle]").forEach((btn) => {
+    btn.addEventListener("click", toggleTheme);
+  });})();
