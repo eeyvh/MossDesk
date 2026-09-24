@@ -99,6 +99,30 @@ body {
   transition: background 0.25s var(--ease), color 0.25s var(--ease);
 }
 
+/* ---------- Logo ---------- */
+
+.logo-img {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+.logo-img--sm {
+  height: 32px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 /* ---------- Landing page ---------- */
 
 .landing {
@@ -112,19 +136,6 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.logo {
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 500;
-  color: var(--text);
-  text-decoration: none;
-  letter-spacing: -0.02em;
-}
-
-.logo span {
-  color: var(--accent);
 }
 
 .landing-nav {
@@ -335,19 +346,6 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-}
-
-.sidebar-logo {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 500;
-  color: var(--text);
-  text-decoration: none;
-  letter-spacing: -0.02em;
-}
-
-.sidebar-logo span {
-  color: var(--accent);
 }
 
 .btn-icon {
