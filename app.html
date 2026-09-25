@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Mossdesk</title>
-  <meta name="description" content="Your local-first notes. Data never leaves this device." />
+  <meta name="description" content="Notas local-first. Seus pensamentos ficam neste dispositivo." />
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,144 +12,136 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app">
-    <div id="sidebar-overlay" class="sidebar-overlay"></div>
-
-    <aside id="sidebar" class="sidebar">
-      <div class="sidebar-header">
-        <a href="index.html" class="sidebar-logo" aria-label="Mossdesk home">
-          <img src="logo.svg" alt="Mossdesk" class="logo-img logo-img--sm" width="120" height="48" />
+  <div class="app notes-shell">
+    <!-- HOME -->
+    <section id="home-view" class="home-view">
+      <header class="home-header">
+        <a href="index.html" class="home-logo" aria-label="Mossdesk">
+          <img src="logo.svg" alt="Mossdesk" class="logo-img logo-img--sm" width="120" height="40" />
         </a>
-        <button id="btn-new" class="btn-icon" title="New note (⌘N)" aria-label="New note">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-        </button>
-      </div>
-
-      <div class="search-wrap">
-        <label for="search-input" class="sr-only">Search notes</label>
-        <input id="search-input" class="search-input" type="search" placeholder="Search notes…" autocomplete="off" />
-      </div>
-
-      <div id="notes-list" class="notes-list" role="list"></div>
-
-      <div class="sidebar-footer">
-        <button id="btn-export" class="btn btn-ghost" title="Export all notes as JSON">Export</button>
-        <button id="btn-clear" class="btn btn-ghost" title="Delete all notes">Clear</button>
-      </div>
-    </aside>
-
-    <main class="editor-area">
-      <div class="editor-toolbar">
-        <button id="mobile-menu-btn" class="btn-icon mobile-menu-btn" aria-label="Open notes list">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
-        </button>
-
-        <div class="privacy-badge">Local only</div>
-
-        <div class="editor-actions">
-          <button id="btn-ai" class="btn-icon" title="Lichen assistant" aria-label="Open Lichen assistant">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+        <div class="home-header-actions">
+          <button id="btn-ai-home" class="pill-btn" title="Lichen" aria-label="Lichen">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
             </svg>
           </button>
-          <button class="theme-toggle" data-theme-toggle title="Toggle dark mode" aria-label="Toggle dark mode">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <button class="pill-btn theme-toggle" data-theme-toggle title="Tema" aria-label="Tema">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
             </svg>
           </button>
-          <span id="editor-meta" class="editor-meta"></span>
-          <button id="btn-delete" class="btn-icon" title="Delete this note" aria-label="Delete note" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        </div>
+      </header>
+
+      <div class="home-search-wrap">
+        <input id="search-input" class="home-search" type="search" placeholder="Buscar" autocomplete="off" />
+      </div>
+
+      <div id="home-empty" class="home-empty">
+        <h1 class="home-empty-title">Sua mesa está limpa</h1>
+        <p class="home-empty-text">Crie uma nota quando algo chegar.<br />Tudo permanece neste dispositivo.</p>
+      </div>
+
+      <div id="home-list" class="home-list" hidden></div>
+
+      <div class="home-fab-wrap">
+        <button id="btn-write" class="home-fab" type="button">Escreva algo</button>
+      </div>
+    </section>
+
+    <!-- EDITOR -->
+    <section id="editor-view" class="editor-view" hidden>
+      <header class="editor-topbar">
+        <button id="btn-back" class="pill-btn" type="button" aria-label="Voltar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <div class="editor-topbar-meta">
+          <span class="privacy-dot" title="Somente local"></span>
+          <span id="editor-meta" class="editor-meta-text"></span>
+        </div>
+        <div class="editor-topbar-actions">
+          <button id="btn-ai" class="pill-btn" title="Lichen" aria-label="Lichen">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+          </button>
+          <button id="btn-delete" class="pill-btn" title="Apagar" aria-label="Apagar" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
             </svg>
           </button>
         </div>
+      </header>
+
+      <div class="format-bar format-bar--notes" role="toolbar" aria-label="Formatação">
+        <select id="font-select" class="pill-select" title="Fonte">
+          <option value="Source Sans 3, system-ui, sans-serif">Sans</option>
+          <option value="Fraunces, Georgia, serif">Fraunces</option>
+          <option value="Lora, Georgia, serif">Lora</option>
+          <option value="Merriweather, Georgia, serif">Merriweather</option>
+          <option value="Playfair Display, Georgia, serif">Playfair</option>
+          <option value="IBM Plex Sans, system-ui, sans-serif">Plex</option>
+          <option value="Space Grotesk, system-ui, sans-serif">Grotesk</option>
+          <option value="Georgia, serif">Georgia</option>
+        </select>
+        <input type="color" id="color-picker" class="pill-color" value="#2A2825" title="Cor" />
+        <button type="button" id="btn-bold" class="pill-tool" title="Negrito"><strong>B</strong></button>
+        <button type="button" id="btn-italic" class="pill-tool" title="Itálico"><em>I</em></button>
+        <span class="pill-sep"></span>
+        <select id="dictation-speak-lang" class="pill-select pill-select--sm" title="Idioma da fala">
+          <option value="pt-BR">Falar PT</option>
+          <option value="en-US">Falar EN</option>
+          <option value="es-ES">Falar ES</option>
+          <option value="de-DE">Falar DE</option>
+          <option value="fr-FR">Falar FR</option>
+        </select>
+        <select id="dictation-write-lang" class="pill-select pill-select--sm" title="Idioma da escrita">
+          <option value="pt">Escrever PT</option>
+          <option value="en">Escrever EN</option>
+          <option value="es">Escrever ES</option>
+          <option value="de">Escrever DE</option>
+          <option value="fr">Escrever FR</option>
+        </select>
+        <button type="button" id="btn-mic" class="pill-tool pill-tool--mic" title="Ditar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+          </svg>
+          <span id="mic-label">Ditar</span>
+        </button>
       </div>
 
-      <div id="editor-empty" class="empty-editor">
-        <h2>Your desk is clear</h2>
-        <p>Create a note when something arrives. Everything stays on this device.</p>
-        <button id="btn-new-empty" class="btn btn-primary" onclick="document.getElementById('btn-new').click()">Write a note</button>
-      </div>
-
-      <div id="editor-form" class="editor-body" hidden>
-        <label for="note-title" class="sr-only">Note title</label>
-        <input id="note-title" class="note-title-input" type="text" placeholder="Title" autocomplete="off" />
-
-        <div class="format-bar" role="toolbar" aria-label="Text formatting">
-          <select id="font-select" class="format-select" title="Font">
-            <option value="Source Sans 3, system-ui, sans-serif">Source Sans</option>
-            <option value="Fraunces, Georgia, serif">Fraunces</option>
-            <option value="Lora, Georgia, serif">Lora</option>
-            <option value="Merriweather, Georgia, serif">Merriweather</option>
-            <option value="Playfair Display, Georgia, serif">Playfair</option>
-            <option value="IBM Plex Sans, system-ui, sans-serif">IBM Plex</option>
-            <option value="Space Grotesk, system-ui, sans-serif">Space Grotesk</option>
-            <option value="Georgia, serif">Georgia</option>
-          </select>
-
-          <input type="color" id="color-picker" class="format-color" value="#2A2825" title="Text color" />
-
-          <button type="button" id="btn-bold" class="format-btn" title="Bold (⌘B)" aria-label="Bold"><strong>B</strong></button>
-          <button type="button" id="btn-italic" class="format-btn" title="Italic (⌘I)" aria-label="Italic"><em>I</em></button>
-
-          <span class="format-sep"></span>
-
-          <select id="dictation-speak-lang" class="format-select format-select-lang" title="Language you speak">
-            <option value="pt-BR">Speak: PT</option>
-            <option value="en-US">Speak: EN</option>
-            <option value="es-ES">Speak: ES</option>
-            <option value="de-DE">Speak: DE</option>
-            <option value="fr-FR">Speak: FR</option>
-          </select>
-          <select id="dictation-write-lang" class="format-select format-select-lang" title="Language to write in the note">
-            <option value="pt">Write: PT</option>
-            <option value="en">Write: EN</option>
-            <option value="es">Write: ES</option>
-            <option value="de">Write: DE</option>
-            <option value="fr">Write: FR</option>
-          </select>
-
-          <button type="button" id="btn-mic" class="format-btn format-btn-mic" title="Dictate with microphone" aria-label="Start dictation">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-            </svg>
-            <span id="mic-label">Dictate</span>
-          </button>
-        </div>
-
+      <div class="editor-scroll">
+        <input id="note-title" class="note-title-input" type="text" placeholder="Título" autocomplete="off" />
         <div
           id="note-content"
           class="note-content"
           contenteditable="true"
           role="textbox"
           aria-multiline="true"
-          aria-label="Note content"
-          data-placeholder="Start writing…"
+          aria-label="Conteúdo"
+          data-placeholder="Comece a escrever…"
         ></div>
       </div>
-    </main>
+    </section>
 
+    <!-- Lichen -->
     <aside id="ai-panel" class="ai-panel" aria-hidden="true">
       <div class="ai-panel-header">
         <div>
           <h2 class="ai-panel-title">Lichen</h2>
-          <p class="ai-panel-sub">Quiet companion for your desk</p>
+          <p class="ai-panel-sub">Companheiro calmo da sua mesa</p>
         </div>
-        <button id="ai-close" class="btn-icon" aria-label="Close Lichen">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <button id="ai-close" class="pill-btn" aria-label="Fechar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
-
       <div class="ai-lang-row">
-        <label for="lichen-lang" class="ai-lang-label">Lichen language</label>
-        <select id="lichen-lang" class="format-select">
+        <label for="lichen-lang" class="ai-lang-label">Idioma</label>
+        <select id="lichen-lang" class="pill-select">
           <option value="pt">Português</option>
           <option value="en">English</option>
           <option value="es">Español</option>
@@ -157,50 +149,55 @@
           <option value="fr">Français</option>
         </select>
       </div>
-
       <div class="ai-quick">
-        <button type="button" class="ai-chip" data-action="summarize">Summarize</button>
-        <button type="button" class="ai-chip" data-action="continue">Continue</button>
-        <button type="button" class="ai-chip" data-action="shorten">Shorten</button>
-        <button type="button" class="ai-chip" data-action="expand">Expand</button>
-        <button type="button" class="ai-chip" data-action="improve">Improve</button>
-        <button type="button" class="ai-chip" data-action="outline">Outline</button>
-        <button type="button" class="ai-chip" data-action="questions">Questions</button>
-        <button type="button" class="ai-chip" data-action="research">Research</button>
+        <button type="button" class="ai-chip" data-action="summarize">Resumir</button>
+        <button type="button" class="ai-chip" data-action="continue">Continuar</button>
+        <button type="button" class="ai-chip" data-action="shorten">Encurtar</button>
+        <button type="button" class="ai-chip" data-action="expand">Expandir</button>
+        <button type="button" class="ai-chip" data-action="improve">Melhorar</button>
+        <button type="button" class="ai-chip" data-action="outline">Estrutura</button>
+        <button type="button" class="ai-chip" data-action="questions">Perguntas</button>
+        <button type="button" class="ai-chip" data-action="research">Pesquisar</button>
       </div>
-
       <div id="ai-messages" class="ai-messages"></div>
-
       <div class="ai-input-row">
-        <textarea id="ai-input" class="ai-input" rows="2" placeholder="Ask Lichen…"></textarea>
+        <textarea id="ai-input" class="ai-input" rows="2" placeholder="Pergunte ao Lichen…"></textarea>
         <div class="ai-input-actions">
-          <button type="button" id="ai-mic" class="btn-icon" title="Speak to Lichen" aria-label="Speak to Lichen">
+          <button type="button" id="ai-mic" class="pill-btn" aria-label="Falar">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
             </svg>
           </button>
-          <button type="button" id="ai-send" class="btn btn-primary ai-send">Send</button>
+          <button type="button" id="ai-send" class="btn btn-primary ai-send">Enviar</button>
         </div>
       </div>
-
       <details class="ai-settings">
-        <summary>API settings (optional)</summary>
-        <p class="ai-settings-help">OpenAI-compatible key for smarter Lichen replies. Stored only in this browser.</p>
+        <summary>API (opcional)</summary>
+        <p class="ai-settings-help">Chave compatível com OpenAI. Só neste navegador.</p>
         <label class="ai-settings-label" for="ai-api-key">API key</label>
         <input id="ai-api-key" class="ai-settings-input" type="password" placeholder="sk-…" autocomplete="off" />
         <label class="ai-settings-label" for="ai-api-base">Base URL</label>
         <input id="ai-api-base" class="ai-settings-input" type="url" placeholder="https://api.openai.com/v1" autocomplete="off" />
         <label class="ai-settings-label" for="ai-api-model">Model</label>
         <input id="ai-api-model" class="ai-settings-input" type="text" placeholder="gpt-4o-mini" autocomplete="off" />
-        <button type="button" id="ai-save-settings" class="btn btn-ghost ai-save-btn">Save settings</button>
+        <button type="button" id="ai-save-settings" class="btn btn-ghost ai-save-btn">Salvar</button>
         <p id="ai-settings-status" class="ai-settings-status"></p>
       </details>
-
-      <p class="ai-privacy-note">Lichen works offline by default. Cross-language dictation uses a free translation service when speak ≠ write language.</p>
+      <p class="ai-privacy-note">Lichen funciona offline por padrão.</p>
     </aside>
     <div id="ai-overlay" class="ai-overlay" hidden></div>
-  </div>
 
+    <!-- hidden legacy hooks -->
+    <button id="btn-new" type="button" hidden></button>
+    <button id="btn-export" type="button" hidden></button>
+    <button id="btn-clear" type="button" hidden></button>
+    <div id="notes-list" hidden></div>
+    <div id="sidebar" hidden></div>
+    <div id="sidebar-overlay" hidden></div>
+    <div id="editor-empty" hidden></div>
+    <div id="editor-form" hidden></div>
+    <button id="mobile-menu-btn" type="button" hidden></button>
+  </div>
   <script src="app.js"></script>
 </body>
 </html>
