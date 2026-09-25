@@ -1,4 +1,4 @@
-/* Mossdesk — Notes-inspired UI + dark mode */
+/* Mossdesk — Notes-inspired UI + fluid transitions */
 
 :root {
   --bg: #F4F1EC;
@@ -21,6 +21,8 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration: 0.38s;
 }
 
 [data-theme="dark"] {
@@ -74,7 +76,6 @@ body {
 .logo-img { display: block; height: 36px; width: auto; }
 .logo-img--sm { height: 32px; }
 
-/* Shell */
 .notes-shell, .app.notes-shell {
   position: relative;
   min-height: 100dvh;
@@ -84,24 +85,165 @@ body {
   background: var(--bg);
 }
 
-/* HOME */
-.home-view {
+/* ========== VIEW TRANSITIONS (iOS Notes push/pop) ========== */
+.home-view,
+.editor-view {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.28s var(--ease), transform 0.28s var(--ease);
-  pointer-events: none;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.home-view {
   z-index: 1;
+  opacity: 0;
+  transform: translate3d(-28%, 0, 0) scale(0.96);
+  transition:
+    opacity var(--duration) var(--ease),
+    transform var(--duration) var(--ease);
+  pointer-events: none;
 }
 .home-view.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0) scale(1);
   pointer-events: auto;
 }
+.home-view.is-leaving {
+  opacity: 0.55;
+  transform: translate3d(-18%, 0, 0) scale(0.97);
+  pointer-events: none;
+}
 
+.editor-view {
+  z-index: 2;
+  background: var(--bg);
+  opacity: 0;
+  transform: translate3d(100%, 0, 0);
+  transition:
+    opacity var(--duration) var(--ease),
+    transform var(--duration) var(--ease);
+  pointer-events: none;
+  box-shadow: -8px 0 32px rgba(42, 40, 37, 0.06);
+}
+[data-theme="dark"] .editor-view,
+:root:not([data-theme="light"]) .editor-view {
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.25);
+}
+.editor-view.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+.editor-view.is-leaving {
+  opacity: 0;
+  transform: translate3d(100%, 0, 0);
+  pointer-events: none;
+}
+
+/* Stagger note cards */
+.home-note {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: noteIn 0.4s var(--ease-out) forwards;
+}
+.home-note:nth-child(1) { animation-delay: 0.04s; }
+.home-note:nth-child(2) { animation-delay: 0.08s; }
+.home-note:nth-child(3) { animation-delay: 0.12s; }
+.home-note:nth-child(4) { animation-delay: 0.16s; }
+.home-note:nth-child(5) { animation-delay: 0.2s; }
+.home-note:nth-child(6) { animation-delay: 0.24s; }
+.home-note:nth-child(n+7) { animation-delay: 0.28s; }
+
+@keyframes noteIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-empty.is-visible .home-empty-title,
+.home-empty.is-visible .home-empty-text {
+  animation: fadeUp 0.45s var(--ease-out) both;
+}
+.home-empty.is-visible .home-empty-text { animation-delay: 0.08s; }
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-fab {
+  transition:
+    transform 0.25s var(--ease),
+    background 0.2s ease,
+    box-shadow 0.25s ease;
+}
+.home-fab:active {
+  transform: scale(0.94);
+}
+.home-fab.pulse {
+  animation: fabPulse 0.45s var(--ease);
+}
+@keyframes fabPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+/* Editor content fade-in when opening */
+.editor-view.is-visible .editor-topbar {
+  animation: fadeDown 0.35s var(--ease-out) both;
+}
+.editor-view.is-visible .format-bar--notes {
+  animation: fadeDown 0.4s var(--ease-out) 0.04s both;
+}
+.editor-view.is-visible .editor-scroll {
+  animation: fadeUp 0.4s var(--ease-out) 0.06s both;
+}
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-view,
+  .editor-view,
+  .home-note,
+  .home-fab,
+  .editor-view.is-visible .editor-topbar,
+  .editor-view.is-visible .format-bar--notes,
+  .editor-view.is-visible .editor-scroll,
+  .home-empty.is-visible .home-empty-title,
+  .home-empty.is-visible .home-empty-text {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+  .home-view,
+  .editor-view {
+    transform: none !important;
+  }
+  .home-view.is-visible,
+  .editor-view.is-visible {
+    opacity: 1;
+  }
+}
+
+/* HOME layout */
 .home-header {
   display: flex;
   align-items: center;
@@ -167,7 +309,7 @@ body {
   color: var(--text);
   cursor: pointer;
   font-family: var(--font-body);
-  transition: transform 0.15s ease, background 0.15s ease;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 .home-note:active { transform: scale(0.98); }
 .home-note-title {
@@ -203,6 +345,7 @@ body {
   justify-content: center;
   background: linear-gradient(to top, var(--bg) 60%, transparent);
   pointer-events: none;
+  z-index: 5;
 }
 .home-fab {
   pointer-events: auto;
@@ -216,30 +359,10 @@ body {
   color: #fff;
   cursor: pointer;
   box-shadow: var(--shadow-lift);
-  transition: transform 0.2s var(--ease), background 0.2s ease;
 }
-.home-fab:active { transform: scale(0.96); }
 .home-fab:hover { background: var(--accent-hover); }
 
-/* EDITOR */
-.editor-view {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
-  opacity: 0;
-  transform: translateX(12px);
-  transition: opacity 0.28s var(--ease), transform 0.28s var(--ease);
-  pointer-events: none;
-  z-index: 2;
-}
-.editor-view.is-visible {
-  opacity: 1;
-  transform: translateX(0);
-  pointer-events: auto;
-}
-
+/* EDITOR chrome */
 .editor-topbar {
   display: flex;
   align-items: center;
@@ -272,7 +395,6 @@ body {
 }
 .editor-topbar-actions { display: flex; gap: 6px; }
 
-/* Rounded pills — Notes style */
 .pill-btn {
   width: 36px;
   height: 36px;
@@ -284,7 +406,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
   flex-shrink: 0;
 }
 .pill-btn:hover {
@@ -292,6 +414,7 @@ body {
   color: var(--accent);
   background: var(--accent-soft);
 }
+.pill-btn:active { transform: scale(0.92); }
 .pill-btn:disabled { opacity: 0.4; cursor: default; }
 
 .format-bar--notes {
@@ -354,12 +477,14 @@ body {
   justify-content: center;
   gap: 4px;
   flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 .pill-tool:hover {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-soft);
 }
+.pill-tool:active { transform: scale(0.92); }
 .pill-tool--mic { font-size: 0.75rem; padding: 0 12px; }
 .pill-tool.listening {
   background: var(--danger-soft);
@@ -411,7 +536,6 @@ body {
   pointer-events: none;
 }
 
-/* Buttons shared */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -435,17 +559,17 @@ body {
   border: 1px solid var(--border);
 }
 
-/* Lichen panel */
+/* Lichen */
 .ai-overlay {
   position: fixed; inset: 0; background: rgba(42, 40, 37, 0.3); z-index: 300;
-  opacity: 0; transition: opacity 0.25s ease;
+  opacity: 0; transition: opacity 0.3s var(--ease);
 }
 .ai-overlay.visible { opacity: 1; }
 [data-theme="dark"] .ai-overlay { background: rgba(0, 0, 0, 0.5); }
 .ai-panel {
   position: fixed; top: 0; right: 0; bottom: 0; width: min(400px, 100vw);
   background: var(--surface); z-index: 310; transform: translateX(100%);
-  transition: transform 0.3s var(--ease); display: flex; flex-direction: column;
+  transition: transform 0.35s var(--ease); display: flex; flex-direction: column;
   box-shadow: var(--shadow-lift); border-left: 1px solid var(--border);
 }
 .ai-panel.open { transform: translateX(0); }
@@ -468,13 +592,22 @@ body {
   font-size: 0.75rem; padding: 0.4rem 0.75rem; border-radius: var(--radius-pill);
   border: 1px solid var(--border); background: var(--bg); color: var(--text);
   cursor: pointer; font-family: var(--font-body);
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 .ai-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.ai-chip:active { transform: scale(0.96); }
 .ai-messages {
   flex: 1; overflow-y: auto; padding: 16px;
   display: flex; flex-direction: column; gap: 12px;
 }
-.ai-msg-wrap { display: flex; flex-direction: column; gap: 4px; max-width: 92%; }
+.ai-msg-wrap {
+  display: flex; flex-direction: column; gap: 4px; max-width: 92%;
+  animation: msgIn 0.3s var(--ease-out) both;
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .ai-msg-wrap--user { align-self: flex-end; align-items: flex-end; }
 .ai-msg-wrap--assistant { align-self: flex-start; }
 .ai-msg {
@@ -517,7 +650,7 @@ body {
   font-size: 0.7rem; color: var(--text-muted); padding: 0 16px 12px; line-height: 1.4;
 }
 
-/* Landing page leftovers (index.html) */
+/* Landing (index) */
 .landing { min-height: 100vh; display: flex; flex-direction: column; }
 .landing-header {
   padding: 16px 20px; display: grid; grid-template-columns: 40px 1fr 40px;
@@ -576,7 +709,6 @@ body {
   }
 }
 
-.theme-toggle { /* alias */ }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;
