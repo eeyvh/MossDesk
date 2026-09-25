@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" role="img" aria-label="Lichen">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#E8F0EC"/>
+      <stop offset="100%" stop-color="#F4F1EC"/>
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.35"/>
+    </filter>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="url(#bg)"/>
+  <g transform="translate(60,62)" filter="url(#soft)">
+    <g class="lichen-core">
+      <path d="M0,-8 C6,-18 14,-22 18,-16 C22,-10 16,-2 10,2 C4,6 -2,4 0,-8Z" fill="#8FAE9C" opacity="0.9"/>
+      <path d="M0,-6 C-8,-16 -16,-20 -20,-14 C-24,-8 -16,0 -10,2 C-4,4 2,2 0,-6Z" fill="#7A9A88" opacity="0.85"/>
+    </g>
+    <g class="lichen-arm lichen-arm-1">
+      <path d="M8,-4 C18,-14 28,-12 32,-4 C34,2 26,8 18,6 C12,4 6,2 8,-4Z" fill="#9BB5A4"/>
+      <path d="M22,-8 C28,-14 34,-10 36,-4 C37,0 32,4 26,2" stroke="#6B8F7A" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M26,-2 C30,2 34,0 35,4" stroke="#7A9A88" stroke-width="1" fill="none" stroke-linecap="round"/>
+    </g>
+    <g class="lichen-arm lichen-arm-2">
+      <path d="M-6,-6 C-16,-18 -28,-16 -32,-6 C-34,0 -26,8 -16,6 C-10,4 -4,0 -6,-6Z" fill="#8FAE9C"/>
+      <path d="M-20,-10 C-26,-16 -32,-12 -34,-6 C-35,-2 -30,2 -24,0" stroke="#5C7A6B" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    </g>
+    <g class="lichen-arm lichen-arm-3">
+      <path d="M4,6 C10,16 8,28 0,32 C-6,34 -12,26 -10,18 C-8,12 0,8 4,6Z" fill="#7A9A88"/>
+      <path d="M2,18 C6,26 2,32 -2,34" stroke="#6B8F7A" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      <path d="M-4,16 C-8,24 -4,30 0,32" stroke="#8FAE9C" stroke-width="1" fill="none" stroke-linecap="round"/>
+    </g>
+    <g class="lichen-arm lichen-arm-4">
+      <path d="M-2,4 C-12,14 -10,26 -2,30 C4,32 10,24 8,16 C6,10 2,6 -2,4Z" fill="#9BB5A4" opacity="0.9"/>
+    </g>
+    <g class="lichen-arm lichen-arm-5">
+      <path d="M10,2 C20,8 28,6 30,14 C31,20 24,24 16,20 C12,18 8,10 10,2Z" fill="#A8C4B0"/>
+      <path d="M18,10 C24,14 28,12 29,18" stroke="#7A9A88" stroke-width="1" fill="none" stroke-linecap="round"/>
+    </g>
+    <circle class="lichen-dot" cx="30" cy="-6" r="1.4" fill="#C5D9C8"/>
+    <circle class="lichen-dot" cx="-28" cy="-8" r="1.2" fill="#C5D9C8"/>
+    <circle class="lichen-dot" cx="2" cy="34" r="1.3" fill="#B8CFBC"/>
+    <circle class="lichen-dot" cx="28" cy="16" r="1.1" fill="#C5D9C8"/>
+  </g>
+  <style>
+    .lichen-core { transform-origin: 0px 0px; animation: breathe 4s ease-in-out infinite; }
+    .lichen-arm-1 { transform-origin: 8px -4px; animation: sway1 5s ease-in-out infinite; }
+    .lichen-arm-2 { transform-origin: -6px -6px; animation: sway2 5.5s ease-in-out infinite; }
+    .lichen-arm-3 { transform-origin: 4px 6px; animation: sway3 4.8s ease-in-out infinite; }
+    .lichen-arm-4 { transform-origin: -2px 4px; animation: sway1 6s ease-in-out infinite reverse; }
+    .lichen-arm-5 { transform-origin: 10px 2px; animation: sway2 5.2s ease-in-out infinite reverse; }
+    .lichen-dot { animation: twinkle 3s ease-in-out infinite; }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    @keyframes sway1 {
+      0%, 100% { transform: rotate(-2.5deg); }
+      50% { transform: rotate(3deg); }
+    }
+    @keyframes sway2 {
+      0%, 100% { transform: rotate(2deg); }
+      50% { transform: rotate(-3deg); }
+    }
+    @keyframes sway3 {
+      0%, 100% { transform: rotate(-1deg) translateY(0); }
+      50% { transform: rotate(2deg) translateY(1.5px); }
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .lichen-core, .lichen-arm-1, .lichen-arm-2, .lichen-arm-3, .lichen-arm-4, .lichen-arm-5, .lichen-dot {
+        animation: none !important;
+      }
+    }
+  </style>
+</svg>
