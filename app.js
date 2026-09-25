@@ -1,6 +1,6 @@
 /**
  * Mossdesk — local-first notes
- * Rich text, voice dictation, improved AI assistant.
+ * Lichen assistant: multi-language + cross-language dictation
  */
 
 (function () {
@@ -9,6 +9,9 @@
   var STORAGE_KEY = "mossdesk-notes-v2";
   var THEME_KEY = "mossdesk-theme";
   var AI_KEY = "mossdesk-ai-settings";
+  var LANG_KEY = "mossdesk-lichen-lang";
+  var SPEAK_KEY = "mossdesk-speak-lang";
+  var WRITE_KEY = "mossdesk-write-lang";
 
   var notes = [];
   var activeId = null;
@@ -21,6 +24,7 @@
   var $ = function (sel) {
     return document.querySelector(sel);
   };
+
   var notesListEl = $("#notes-list");
   var searchInput = $("#search-input");
   var titleInput = $("#note-title");
@@ -41,6 +45,8 @@
   var btnItalic = $("#btn-italic");
   var btnMic = $("#btn-mic");
   var micLabel = $("#mic-label");
+  var speakLangEl = $("#dictation-speak-lang");
+  var writeLangEl = $("#dictation-write-lang");
   var btnAi = $("#btn-ai");
   var aiPanel = $("#ai-panel");
   var aiOverlay = $("#ai-overlay");
@@ -49,11 +55,89 @@
   var aiInput = $("#ai-input");
   var aiSend = $("#ai-send");
   var aiMic = $("#ai-mic");
+  var lichenLangEl = $("#lichen-lang");
   var aiApiKey = $("#ai-api-key");
   var aiApiBase = $("#ai-api-base");
   var aiApiModel = $("#ai-api-model");
   var aiSaveSettings = $("#ai-save-settings");
   var aiSettingsStatus = $("#ai-settings-status");
+
+  var SPEECH_TO_CODE = {
+    "pt-BR": "pt",
+    "en-US": "en",
+    "es-ES": "es",
+    "de-DE": "de",
+    "fr-FR": "fr",
+  };
+
+  var CHIP_LABELS = {
+    pt: {
+      summarize: "Resumir",
+      continue: "Continuar",
+      shorten: "Encurtar",
+      expand: "Expandir",
+      improve: "Melhorar",
+      outline: "Estrutura",
+      questions: "Perguntas",
+      research: "Pesquisar",
+    },
+    en: {
+      summarize: "Summarize",
+      continue: "Continue",
+      shorten: "Shorten",
+      expand: "Expand",
+      improve: "Improve",
+      outline: "Outline",
+      questions: "Questions",
+      research: "Research",
+    },
+    es: {
+      summarize: "Resumir",
+      continue: "Continuar",
+      shorten: "Acortar",
+      expand: "Expandir",
+      improve: "Mejorar",
+      outline: "Esquema",
+      questions: "Preguntas",
+      research: "Investigar",
+    },
+    de: {
+      summarize: "Zusammenfassen",
+      continue: "Weiter",
+      shorten: "Kürzen",
+      expand: "Erweitern",
+      improve: "Verbessern",
+      outline: "Gliederung",
+      questions: "Fragen",
+      research: "Recherchieren",
+    },
+    fr: {
+      summarize: "Résumer",
+      continue: "Continuer",
+      shorten: "Raccourcir",
+      expand: "Développer",
+      improve: "Améliorer",
+      outline: "Plan",
+      questions: "Questions",
+      research: "Rechercher",
+    },
+  };
+
+  function getLichenLang() {
+    return localStorage.getItem(LANG_KEY) || "pt";
+  }
+
+  function setLichenLang(lang) {
+    localStorage.setItem(LANG_KEY, lang);
+  }
+
+  function getSpeakLang() {
+    return localStorage.getItem(SPEAK_KEY) || "pt-BR";
+  }
+
+  function getWriteLang() {
+    return localStorage.getItem(WRITE_KEY) || "pt";
+  }
 
   function loadNotes() {
     try {
@@ -338,14 +422,26 @@
     scheduleSave();
   }
 
-  function getSpeechRecognition() {
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return null;
-    var r = new SR();
-    r.continuous = true;
-    r.interimResults = true;
-    r.lang = navigator.language || "pt-BR";
-    return r;
+  function translateText(text, from, to) {
+    if (!text || from === to) return Promise.resolve(text);
+    var url =
+      "https://api.mymemory.translated.net/get?q=" +
+      encodeURIComponent(text.slice(0, 450)) +
+      "&langpair=" +
+      encodeURIComponent(from + "|" + to);
+    return fetch(url)
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        if (data && data.responseData && data.responseData.translatedText) {
+          return data.responseData.translatedText;
+        }
+        return text;
+      })
+      .catch(function () {
+        return text;
+      });
   }
 
   function insertTextAtCursor(text) {
@@ -368,9 +464,7 @@
   }
 
   function insertHtmlIntoNote(text) {
-    if (!activeId) {
-      createNote();
-    }
+    if (!activeId) createNote();
     var html = text
       .split(/\n\n+/)
       .map(function (p) {
@@ -378,13 +472,20 @@
       })
       .join("");
     contentEl.focus();
-    if (!stripHtml(contentEl.innerHTML)) {
-      contentEl.innerHTML = html;
-    } else {
-      contentEl.innerHTML += html;
-    }
+    if (!stripHtml(contentEl.innerHTML)) contentEl.innerHTML = html;
+    else contentEl.innerHTML += html;
     scheduleSave();
     persistCurrent();
+  }
+
+  function getSpeechRecognition() {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    var r = new SR();
+    r.continuous = true;
+    r.interimResults = true;
+    r.lang = getSpeakLang();
+    return r;
   }
 
   function toggleDictation() {
@@ -399,7 +500,20 @@
         for (var i = event.resultIndex; i < event.results.length; i++) {
           if (event.results[i].isFinal) final += event.results[i][0].transcript;
         }
-        if (final) insertTextAtCursor(final.trim());
+        if (!final) return;
+        var spoken = final.trim();
+        var from = SPEECH_TO_CODE[getSpeakLang()] || "en";
+        var to = getWriteLang();
+        if (from === to) {
+          insertTextAtCursor(spoken);
+        } else {
+          if (micLabel) micLabel.textContent = "Translating…";
+          translateText(spoken, from, to).then(function (translated) {
+            insertTextAtCursor(translated);
+            if (isListening && micLabel) micLabel.textContent = "Listening…";
+            else if (micLabel) micLabel.textContent = "Dictate";
+          });
+        }
       };
       recognition.onerror = function () {
         stopDictation();
@@ -407,6 +521,7 @@
       recognition.onend = function () {
         if (isListening) {
           try {
+            recognition.lang = getSpeakLang();
             recognition.start();
           } catch (e) {
             stopDictation();
@@ -420,6 +535,7 @@
 
   function startDictation() {
     try {
+      recognition.lang = getSpeakLang();
       recognition.start();
       isListening = true;
       btnMic.classList.add("listening");
@@ -438,16 +554,34 @@
     if (micLabel) micLabel.textContent = "Dictate";
   }
 
+  function updateChipLabels() {
+    var lang = getLichenLang();
+    var labels = CHIP_LABELS[lang] || CHIP_LABELS.en;
+    document.querySelectorAll(".ai-chip").forEach(function (chip) {
+      var a = chip.dataset.action;
+      if (labels[a]) chip.textContent = labels[a];
+    });
+  }
+
+  function welcomeMessage() {
+    var lang = getLichenLang();
+    var map = {
+      pt: "Olá, eu sou o Lichen — companheiro calmo do Mossdesk. Posso resumir, continuar, encurtar ou melhorar sua nota. Escolha o idioma acima. No editor, fale em um idioma e peça para escrever em outro.",
+      en: "Hi, I’m Lichen — Mossdesk’s quiet companion. I can summarize, continue, shorten, or improve your note. Pick a language above. In the editor, speak in one language and write in another.",
+      es: "Hola, soy Lichen — el compañero tranquilo de Mossdesk. Puedo resumir, continuar, acortar o mejorar tu nota. Elige el idioma arriba. En el editor, habla en un idioma y escribe en otro.",
+      de: "Hallo, ich bin Lichen — der ruhige Begleiter von Mossdesk. Ich kann zusammenfassen, fortsetzen, kürzen oder verbessern. Sprache oben wählen. Im Editor: sprechen in einer Sprache, schreiben in einer anderen.",
+      fr: "Bonjour, je suis Lichen — le compagnon calme de Mossdesk. Je peux résumer, continuer, raccourcir ou améliorer votre note. Choisissez la langue ci-dessus. Dans l’éditeur, parlez une langue et écrivez dans une autre.",
+    };
+    return map[lang] || map.en;
+  }
+
   function openAiPanel() {
     aiPanel.classList.add("open");
     aiPanel.setAttribute("aria-hidden", "false");
     aiOverlay.hidden = false;
     aiOverlay.classList.add("visible");
     if (!aiMessages.children.length) {
-      appendAiMessage(
-        "assistant",
-        "Olá. Posso resumir, continuar, encurtar, expandir ou melhorar o que você está escrevendo. Use os atalhos acima ou digite uma pergunta. Sem chave de API, tudo roda neste dispositivo."
-      );
+      appendAiMessage("assistant", welcomeMessage());
     }
   }
 
@@ -464,28 +598,32 @@
     opts = opts || {};
     var wrap = document.createElement("div");
     wrap.className = "ai-msg-wrap ai-msg-wrap--" + role;
-
     var div = document.createElement("div");
     div.className = "ai-msg ai-msg--" + role;
     div.textContent = text;
     wrap.appendChild(div);
-
     if (role === "assistant" && text && !opts.noInsert) {
       var actions = document.createElement("div");
       actions.className = "ai-msg-actions";
       var insertBtn = document.createElement("button");
       insertBtn.type = "button";
       insertBtn.className = "ai-insert-btn";
-      insertBtn.textContent = "Insert into note";
+      var insertLabels = {
+        pt: "Inserir na nota",
+        en: "Insert into note",
+        es: "Insertar en la nota",
+        de: "In Notiz einfügen",
+        fr: "Insérer dans la note",
+      };
+      insertBtn.textContent = insertLabels[getLichenLang()] || insertLabels.en;
       insertBtn.addEventListener("click", function () {
         insertHtmlIntoNote(text);
-        insertBtn.textContent = "Inserted";
+        insertBtn.textContent = "✓";
         insertBtn.disabled = true;
       });
       actions.appendChild(insertBtn);
       wrap.appendChild(actions);
     }
-
     aiMessages.appendChild(wrap);
     aiMessages.scrollTop = aiMessages.scrollHeight;
     return wrap;
@@ -504,24 +642,28 @@
     return { title: note.title || "", body: stripHtml(note.content) };
   }
 
-  function looksPortuguese(text) {
-    return /[áàâãéêíóôõúç]|\b(que|não|você|para|uma|com|está|são)\b/i.test(text || "");
-  }
-
   function localAssistantReply(userText, action) {
+    var lang = getLichenLang();
     var ctx = getNoteContext();
     var body = ctx.body;
     var title = ctx.title;
     var words = body ? body.split(/\s+/).filter(Boolean).length : 0;
-    var pt = looksPortuguese(body + " " + userText + " " + title);
     var lower = (userText || "").toLowerCase();
     var act = action || "";
 
+    function emptyMsg() {
+      var m = {
+        pt: "A nota ainda está vazia. Escreva ou dite algumas linhas.",
+        en: "This note is still empty. Write or dictate a few lines.",
+        es: "La nota aún está vacía. Escribe o dicta algunas líneas.",
+        de: "Die Notiz ist noch leer. Schreiben oder diktieren Sie ein paar Zeilen.",
+        fr: "La note est encore vide. Écrivez ou dictez quelques lignes.",
+      };
+      return m[lang] || m.en;
+    }
+
     if (/summar/i.test(lower) || act === "summarize") {
-      if (!body)
-        return pt
-          ? "A nota ainda está vazia. Escreva alguns parágrafos e peço um resumo."
-          : "This note is still empty. Write a few paragraphs and I can summarize.";
+      if (!body) return emptyMsg();
       var sentences = body.match(/[^.!?]+[.!?]+/g) || [body];
       var pick = sentences
         .slice(0, 4)
@@ -529,125 +671,128 @@
           return s.trim();
         })
         .join(" ");
-      return (
-        (pt ? "Resumo das ideias principais:\n\n" : "Main ideas:\n\n") +
-        pick +
-        (sentences.length > 4 ? "…" : "") +
-        (pt ? "\n\n(~" + words + " palavras)" : "\n\n(~" + words + " words)")
-      );
+      var heads = {
+        pt: "Resumo:\n\n",
+        en: "Summary:\n\n",
+        es: "Resumen:\n\n",
+        de: "Zusammenfassung:\n\n",
+        fr: "Résumé :\n\n",
+      };
+      return (heads[lang] || heads.en) + pick + (sentences.length > 4 ? "…" : "");
     }
 
-    if (act === "continue" || /continuar|continue writing|continue/i.test(lower)) {
-      if (!body)
-        return pt
-          ? "Comece com uma ou duas frases. Depois posso sugerir a continuação."
-          : "Start with a line or two. Then I can suggest a continuation.";
-      var tail = body.slice(-220).trim();
-      return pt
-        ? "Sugestão de continuação (edite à vontade):\n\n…" +
-            tail +
-            "\n\nA partir daí, vale aprofundar o ponto central, dar um exemplo concreto e fechar com a próxima pergunta que você ainda precisa responder."
-        : "Suggested continuation (edit freely):\n\n…" +
-            tail +
-            "\n\nFrom here, deepen the main point, add one concrete example, and end with the next question you still need to answer.";
+    if (act === "continue" || /continuar|continue|continuar|weiter|continuer/i.test(lower)) {
+      if (!body) return emptyMsg();
+      var tail = body.slice(-200).trim();
+      var cont = {
+        pt: "Sugestão de continuação:\n\n…" + tail + "\n\nAprofunde a ideia central, dê um exemplo e feche com um próximo passo.",
+        en: "Suggested continuation:\n\n…" + tail + "\n\nDeepen the core idea, add one example, and close with a next step.",
+        es: "Continuación sugerida:\n\n…" + tail + "\n\nProfundiza la idea, añade un ejemplo y cierra con un siguiente paso.",
+        de: "Vorschlag zur Fortsetzung:\n\n…" + tail + "\n\nVertiefen Sie die Kernidee, nennen Sie ein Beispiel und schließen Sie mit dem nächsten Schritt.",
+        fr: "Suite suggérée :\n\n…" + tail + "\n\nApprofondissez l’idée, ajoutez un exemple et terminez par la prochaine étape.",
+      };
+      return cont[lang] || cont.en;
     }
 
-    if (act === "shorten" || /shorten|encurtar|resumir texto/i.test(lower)) {
-      if (!body)
-        return pt ? "Não há texto para encurtar ainda." : "There is no text to shorten yet.";
+    if (act === "shorten" || /shorten|encurtar|acortar|kürzen|raccourcir/i.test(lower)) {
+      if (!body) return emptyMsg();
       var short = body
         .replace(/\s+/g, " ")
         .split(/(?<=[.!?])\s+/)
         .slice(0, Math.max(2, Math.ceil(words / 40)))
         .join(" ");
-      return (
-        (pt ? "Versão mais curta:\n\n" : "Shorter version:\n\n") +
-        (short.length > 500 ? short.slice(0, 500) + "…" : short)
-      );
+      var sh = {
+        pt: "Versão mais curta:\n\n",
+        en: "Shorter version:\n\n",
+        es: "Versión más corta:\n\n",
+        de: "Kürzere Fassung:\n\n",
+        fr: "Version plus courte :\n\n",
+      };
+      return (sh[lang] || sh.en) + (short.length > 500 ? short.slice(0, 500) + "…" : short);
     }
 
-    if (act === "expand" || /expand|expandir|desenvolver/i.test(lower)) {
-      if (!body)
-        return pt
-          ? "Escreva a ideia central primeiro; depois ajudo a expandir."
-          : "Write the core idea first; then I can help expand it.";
-      return pt
-        ? "Para expandir este trecho:\n\n1. Explique o porquê (motivo ou contexto).\n2. Dê um exemplo real ou cenário.\n3. Mostre a consequência ou o próximo passo.\n\nVocê pode pedir: “expanda o segundo parágrafo” depois de marcar a parte."
-        : "To expand this draft:\n\n1. Explain why it matters.\n2. Add a concrete example.\n3. Show the consequence or next step.\n\nYou can also ask to expand a specific paragraph.";
+    if (act === "expand" || /expand|expandir|erweitern|développer/i.test(lower)) {
+      if (!body) return emptyMsg();
+      var ex = {
+        pt: "Para expandir:\n\n1. Explique o porquê.\n2. Dê um exemplo concreto.\n3. Mostre a consequência ou próximo passo.",
+        en: "To expand:\n\n1. Explain why it matters.\n2. Add a concrete example.\n3. Show the consequence or next step.",
+        es: "Para expandir:\n\n1. Explica el porqué.\n2. Añade un ejemplo concreto.\n3. Muestra la consecuencia o el siguiente paso.",
+        de: "Zum Erweitern:\n\n1. Erklären Sie das Warum.\n2. Nennen Sie ein konkretes Beispiel.\n3. Zeigen Sie die Folge oder den nächsten Schritt.",
+        fr: "Pour développer :\n\n1. Expliquez le pourquoi.\n2. Ajoutez un exemple concret.\n3. Montrez la conséquence ou l’étape suivante.",
+      };
+      return ex[lang] || ex.en;
     }
 
-    if (act === "improve" || /improve|melhorar|clarity|estrutura/i.test(lower)) {
-      if (!body)
-        return pt
-          ? "Adicione texto primeiro. Depois sugiro clareza e estrutura."
-          : "Add some text first. Then I can suggest clarity and structure.";
-      return pt
-        ? "Sugestões calmas para esta nota:\n\n• Comece com uma ideia clara na primeira frase.\n• Um parágrafo = um pensamento.\n• Prefira palavras concretas.\n• Termine com uma pergunta ou próximo passo.\n\nContagem aproximada: " +
-            words +
-            " palavras."
-        : "Calm suggestions for this note:\n\n• Lead with one clear idea.\n• One paragraph, one thought.\n• Prefer concrete words.\n• End with a question or next step.\n\nApprox. word count: " +
-            words +
-            ".";
+    if (act === "improve" || /improve|melhorar|mejorar|verbessern|améliorer/i.test(lower)) {
+      if (!body) return emptyMsg();
+      var im = {
+        pt: "Sugestões:\n\n• Uma ideia clara na primeira frase.\n• Um parágrafo = um pensamento.\n• Palavras concretas.\n• Feche com pergunta ou próximo passo.\n\n~" + words + " palavras.",
+        en: "Suggestions:\n\n• One clear idea in the first sentence.\n• One paragraph, one thought.\n• Concrete words.\n• End with a question or next step.\n\n~" + words + " words.",
+        es: "Sugerencias:\n\n• Una idea clara al inicio.\n• Un párrafo = un pensamiento.\n• Palabras concretas.\n• Cierra con pregunta o siguiente paso.\n\n~" + words + " palabras.",
+        de: "Vorschläge:\n\n• Eine klare Idee im ersten Satz.\n• Ein Absatz = ein Gedanke.\n• Konkrete Wörter.\n• Schließen mit Frage oder nächstem Schritt.\n\n~" + words + " Wörter.",
+        fr: "Suggestions :\n\n• Une idée claire dès la première phrase.\n• Un paragraphe = une pensée.\n• Des mots concrets.\n• Terminez par une question ou la suite.\n\n~" + words + " mots.",
+      };
+      return im[lang] || im.en;
     }
 
-    if (act === "outline" || /outline|estrutura|esqueleto|tópicos/i.test(lower)) {
-      if (!body)
-        return pt
-          ? "Estrutura sugerida para começar:\n\n1. Ideia central\n2. Contexto\n3. Pontos principais\n4. Exemplo\n5. Conclusão ou próximos passos"
-          : "Suggested outline to start:\n\n1. Core idea\n2. Context\n3. Key points\n4. Example\n5. Conclusion or next steps";
-      return pt
-        ? "Possível estrutura a partir do que você já escreveu:\n\n1. Abertura — o que está em jogo\n2. Desenvolvimento — argumentos ou fatos\n3. Exemplo ou evidência\n4. Tensão / dúvida restante\n5. Fechamento — o que fazer em seguida\n\nTítulo atual: “" +
-            (title || "Sem título") +
-            "”"
-        : "Possible structure from what you already wrote:\n\n1. Opening — what’s at stake\n2. Development — arguments or facts\n3. Example or evidence\n4. Remaining tension / open question\n5. Close — what to do next\n\nCurrent title: “" +
-            (title || "Untitled") +
-            "”";
+    if (act === "outline" || /outline|estrutura|esquema|gliederung|plan/i.test(lower)) {
+      var ou = {
+        pt: "Estrutura:\n\n1. Ideia central\n2. Contexto\n3. Pontos principais\n4. Exemplo\n5. Próximos passos",
+        en: "Outline:\n\n1. Core idea\n2. Context\n3. Key points\n4. Example\n5. Next steps",
+        es: "Esquema:\n\n1. Idea central\n2. Contexto\n3. Puntos clave\n4. Ejemplo\n5. Siguientes pasos",
+        de: "Gliederung:\n\n1. Kernidee\n2. Kontext\n3. Hauptpunkte\n4. Beispiel\n5. Nächste Schritte",
+        fr: "Plan :\n\n1. Idée centrale\n2. Contexte\n3. Points clés\n4. Exemple\n5. Prochaines étapes",
+      };
+      return ou[lang] || ou.en;
     }
 
-    if (act === "questions" || /question|perguntas/i.test(lower)) {
-      return pt
-        ? "Perguntas úteis para continuar:\n\n• O que a pessoa leitora deve lembrar?\n• O que estou assumindo que pode estar errado?\n• Qual exemplo tornaria isso concreto?\n• Qual é o próximo passo claro?"
-        : "Useful questions to keep writing:\n\n• What should the reader remember?\n• What am I assuming that might be wrong?\n• What example would make this concrete?\n• What is the clear next step?";
+    if (act === "questions" || /question|perguntas|preguntas|fragen/i.test(lower)) {
+      var qu = {
+        pt: "Perguntas úteis:\n\n• O que deve ser lembrado?\n• O que estou assumindo?\n• Qual exemplo torna isso concreto?\n• Qual o próximo passo?",
+        en: "Useful questions:\n\n• What should be remembered?\n• What am I assuming?\n• What example makes this concrete?\n• What is the next step?",
+        es: "Preguntas útiles:\n\n• ¿Qué debe recordarse?\n• ¿Qué estoy asumiendo?\n• ¿Qué ejemplo lo hace concreto?\n• ¿Cuál es el siguiente paso?",
+        de: "Nützliche Fragen:\n\n• Was soll man behalten?\n• Was setze ich voraus?\n• Welches Beispiel macht es konkret?\n• Was ist der nächste Schritt?",
+        fr: "Questions utiles :\n\n• Que faut-il retenir ?\n• Qu’est-ce que j’assume ?\n• Quel exemple rend cela concret ?\n• Quelle est la prochaine étape ?",
+      };
+      return qu[lang] || qu.en;
     }
 
-    if (act === "research" || /research|pesquis|topic|conceito/i.test(lower)) {
-      var topic = title || body.slice(0, 80) || (pt ? "seu tema" : "your topic");
-      return pt
-        ? "Para pesquisar “" +
-            topic +
-            "” sem perder privacidade:\n\n1. Anote 2–3 perguntas que ainda restam.\n2. Busque fontes primárias (docs, papers, sites oficiais).\n3. Cole na nota só os fatos que precisa.\n\nEste assistente local não navega na web — assim suas anotações ficam no dispositivo."
-        : "To research “" +
-            topic +
-            "” while staying private:\n\n1. Note 2–3 remaining questions.\n2. Look up primary sources.\n3. Paste only the facts you need back into the note.\n\nThis local assistant does not browse the web — so your writing stays on-device.";
+    if (act === "research" || /research|pesquis|investig|recherch/i.test(lower)) {
+      var topic = title || body.slice(0, 60) || "…";
+      var re = {
+        pt: "Para pesquisar “" + topic + "”:\n\n1. Liste 2–3 perguntas abertas.\n2. Busque fontes primárias.\n3. Cole na nota só o essencial.\n\nO Lichen local não navega na web.",
+        en: "To research “" + topic + "”:\n\n1. List 2–3 open questions.\n2. Find primary sources.\n3. Paste only what you need.\n\nLocal Lichen does not browse the web.",
+        es: "Para investigar “" + topic + "”:\n\n1. Lista 2–3 preguntas abiertas.\n2. Busca fuentes primarias.\n3. Pega solo lo esencial.\n\nLichen local no navega la web.",
+        de: "Zur Recherche von “" + topic + "”:\n\n1. 2–3 offene Fragen notieren.\n2. Primärquellen suchen.\n3. Nur das Nötige einfügen.\n\nLokaler Lichen surft nicht im Web.",
+        fr: "Pour rechercher « " + topic + " » :\n\n1. Notez 2–3 questions ouvertes.\n2. Cherchez des sources primaires.\n3. Collez seulement l’essentiel.\n\nLichen local ne parcourt pas le web.",
+      };
+      return re[lang] || re.en;
     }
 
-    if (!body) {
-      return pt
-        ? "Sua nota está vazia. Use o microfone na barra de ferramentas ou escreva algumas linhas. Depois peça resumo, continuação ou estrutura."
-        : "Your note is empty. Use the microphone in the toolbar or write a few lines. Then ask for a summary, continuation, or outline.";
-    }
+    if (!body) return emptyMsg();
 
-    return pt
-      ? "Li a nota “" +
-          (title || "Sem título") +
-          "” (~" +
-          words +
-          " palavras).\n\nVocê pode pedir: resumir, continuar, encurtar, expandir, melhorar, estrutura ou perguntas. Também dá para digitar uma dúvida específica."
-      : "I looked at “" +
-          (title || "Untitled") +
-          "” (~" +
-          words +
-          " words).\n\nYou can ask me to summarize, continue, shorten, expand, improve, outline, or list questions — or type a specific question.";
+    var def = {
+      pt: "Li “" + (title || "Sem título") + "” (~" + words + " palavras). Peça resumir, continuar, encurtar, expandir, melhorar, estrutura ou perguntas.",
+      en: "I read “" + (title || "Untitled") + "” (~" + words + " words). Ask me to summarize, continue, shorten, expand, improve, outline, or list questions.",
+      es: "Leí “" + (title || "Sin título") + "” (~" + words + " palabras). Pide resumir, continuar, acortar, expandir, mejorar, esquema o preguntas.",
+      de: "Ich las “" + (title || "Ohne Titel") + "” (~" + words + " Wörter). Bitten Sie um Zusammenfassung, Fortsetzung, Kürzen, Erweitern, Verbessern, Gliederung oder Fragen.",
+      fr: "J’ai lu « " + (title || "Sans titre") + " » (~" + words + " mots). Demandez un résumé, une suite, un raccourci, un développement, une amélioration, un plan ou des questions.",
+    };
+    return def[lang] || def.en;
   }
 
   function buildApiMessages(userText) {
     var ctx = getNoteContext();
     var excerpt = (ctx.body || "").slice(0, 3000);
+    var langNames = { pt: "Portuguese", en: "English", es: "Spanish", de: "German", fr: "French" };
+    var lang = getLichenLang();
     return [
       {
         role: "system",
         content:
-          "You are a calm writing assistant inside Mossdesk, a local-first notes app. Help with clarity, structure, research framing, and drafting. Be concise. Match the user's language (Portuguese or English). When rewriting, return text ready to paste into a note.",
+          "You are Lichen, a calm writing companion inside Mossdesk. Always reply in " +
+          (langNames[lang] || "English") +
+          ". Be concise and helpful with notes, structure, and drafting.",
       },
       {
         role: "user",
@@ -665,10 +810,8 @@
   function callRemoteAi(userText) {
     var settings = loadAiSettings();
     if (!settings.key) return Promise.resolve(null);
-
     var base = (settings.base || "https://api.openai.com/v1").replace(/\/$/, "");
     var model = settings.model || "gpt-4o-mini";
-
     return fetch(base + "/chat/completions", {
       method: "POST",
       headers: {
@@ -683,17 +826,17 @@
     }).then(function (res) {
       if (!res.ok) {
         return res.text().then(function (t) {
-          throw new Error("API error " + res.status + ": " + t.slice(0, 200));
+          throw new Error("API error " + res.status);
         });
       }
       return res.json().then(function (data) {
-        var content =
+        return (
           data &&
           data.choices &&
           data.choices[0] &&
           data.choices[0].message &&
-          data.choices[0].message.content;
-        return content || "No response from model.";
+          data.choices[0].message.content
+        ) || "No response.";
       });
     });
   }
@@ -703,47 +846,23 @@
     var msg = (text || (aiInput && aiInput.value) || "").trim();
     if (!msg && !action) return;
 
-    var display = msg;
-    if (!display && action) {
-      var labels = {
-        summarize: "Summarize",
-        continue: "Continue writing",
-        shorten: "Shorten",
-        expand: "Expand",
-        improve: "Improve",
-        outline: "Outline",
-        questions: "Questions",
-        research: "Research tips",
-      };
-      display = labels[action] || action;
-    }
-
+    var labels = CHIP_LABELS[getLichenLang()] || CHIP_LABELS.en;
+    var display = msg || (action && labels[action]) || action;
     appendAiMessage("user", display);
     if (aiInput) aiInput.value = "";
 
     var thinking = appendAiMessage("assistant", "…", { noInsert: true });
     setAiBusy(true);
-
     var promptForApi = msg || display;
 
     callRemoteAi(promptForApi)
       .then(function (remote) {
         thinking.remove();
-        if (remote) {
-          appendAiMessage("assistant", remote);
-        } else {
-          appendAiMessage("assistant", localAssistantReply(promptForApi, action));
-        }
+        appendAiMessage("assistant", remote || localAssistantReply(promptForApi, action));
       })
-      .catch(function (err) {
+      .catch(function () {
         thinking.remove();
-        appendAiMessage(
-          "assistant",
-          "Não foi possível usar a API (" +
-            (err.message || "erro") +
-            "). Usando modo local:\n\n" +
-            localAssistantReply(promptForApi, action)
-        );
+        appendAiMessage("assistant", localAssistantReply(promptForApi, action));
       })
       .then(function () {
         setAiBusy(false);
@@ -762,7 +881,7 @@
       return;
     }
     var r = new SR();
-    r.lang = navigator.language || "pt-BR";
+    r.lang = getSpeakLang();
     r.interimResults = false;
     r.onresult = function (e) {
       var t = e.results[0][0].transcript;
@@ -807,6 +926,13 @@
     if (aiApiKey) aiApiKey.value = s.key || "";
     if (aiApiBase) aiApiBase.value = s.base || "https://api.openai.com/v1";
     if (aiApiModel) aiApiModel.value = s.model || "gpt-4o-mini";
+  }
+
+  function fillLangControls() {
+    if (lichenLangEl) lichenLangEl.value = getLichenLang();
+    if (speakLangEl) speakLangEl.value = getSpeakLang();
+    if (writeLangEl) writeLangEl.value = getWriteLang();
+    updateChipLabels();
   }
 
   var saveTimer;
@@ -867,6 +993,22 @@
       });
     if (btnMic) btnMic.addEventListener("click", toggleDictation);
 
+    if (speakLangEl)
+      speakLangEl.addEventListener("change", function () {
+        localStorage.setItem(SPEAK_KEY, speakLangEl.value);
+        if (recognition) recognition.lang = speakLangEl.value;
+      });
+    if (writeLangEl)
+      writeLangEl.addEventListener("change", function () {
+        localStorage.setItem(WRITE_KEY, writeLangEl.value);
+      });
+
+    if (lichenLangEl)
+      lichenLangEl.addEventListener("change", function () {
+        setLichenLang(lichenLangEl.value);
+        updateChipLabels();
+      });
+
     if (btnAi) btnAi.addEventListener("click", openAiPanel);
     if (aiClose) aiClose.addEventListener("click", closeAiPanel);
     if (aiOverlay) aiOverlay.addEventListener("click", closeAiPanel);
@@ -899,8 +1041,8 @@
         saveAiSettings(settings);
         if (aiSettingsStatus) {
           aiSettingsStatus.textContent = settings.key
-            ? "Saved. Remote AI is enabled for this browser only."
-            : "Saved. Running in local mode (no API key).";
+            ? "Saved. Remote AI enabled for this browser."
+            : "Saved. Local Lichen mode.";
         }
       });
     }
@@ -913,6 +1055,7 @@
   function init() {
     initTheme();
     fillAiSettingsForm();
+    fillLangControls();
     notes = loadNotes();
     if (notes.length > 0) activeId = notes[0].id;
     bindEvents();
