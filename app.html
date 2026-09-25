@@ -80,7 +80,6 @@
         <label for="note-title" class="sr-only">Note title</label>
         <input id="note-title" class="note-title-input" type="text" placeholder="Title" autocomplete="off" />
 
-        <!-- Formatting toolbar -->
         <div class="format-bar" role="toolbar" aria-label="Text formatting">
           <select id="font-select" class="format-select" title="Font">
             <option value="Source Sans 3, system-ui, sans-serif">Source Sans</option>
@@ -120,12 +119,11 @@
       </div>
     </main>
 
-    <!-- AI Assistant panel -->
     <aside id="ai-panel" class="ai-panel" aria-hidden="true">
       <div class="ai-panel-header">
         <div>
           <h2 class="ai-panel-title">Assistant</h2>
-          <p class="ai-panel-sub">Ask questions or research your note</p>
+          <p class="ai-panel-sub">Help with your note — local by default</p>
         </div>
         <button id="ai-close" class="btn-icon" aria-label="Close assistant">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -135,16 +133,20 @@
       </div>
 
       <div class="ai-quick">
-        <button type="button" class="ai-chip" data-prompt="Summarize the main ideas in my current note.">Summarize note</button>
-        <button type="button" class="ai-chip" data-prompt="Suggest how I can improve clarity and structure in what I wrote.">Improve writing</button>
-        <button type="button" class="ai-chip" data-prompt="Research and explain key concepts related to what I am writing about.">Research topic</button>
-        <button type="button" class="ai-chip" data-prompt="List questions I still need to answer about this topic.">Open questions</button>
+        <button type="button" class="ai-chip" data-action="summarize">Summarize</button>
+        <button type="button" class="ai-chip" data-action="continue">Continue writing</button>
+        <button type="button" class="ai-chip" data-action="shorten">Shorten</button>
+        <button type="button" class="ai-chip" data-action="expand">Expand</button>
+        <button type="button" class="ai-chip" data-action="improve">Improve</button>
+        <button type="button" class="ai-chip" data-action="outline">Outline</button>
+        <button type="button" class="ai-chip" data-action="questions">Questions</button>
+        <button type="button" class="ai-chip" data-action="research">Research tips</button>
       </div>
 
       <div id="ai-messages" class="ai-messages"></div>
 
       <div class="ai-input-row">
-        <textarea id="ai-input" class="ai-input" rows="2" placeholder="Ask about your note…" ></textarea>
+        <textarea id="ai-input" class="ai-input" rows="2" placeholder="Ask anything about this note…"></textarea>
         <div class="ai-input-actions">
           <button type="button" id="ai-mic" class="btn-icon" title="Speak to assistant" aria-label="Speak to assistant">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -155,7 +157,20 @@
         </div>
       </div>
 
-      <p class="ai-privacy-note">Voice stays in the browser when possible. Optional AI replies use only what you type here — your full notes are not uploaded unless you ask.</p>
+      <details class="ai-settings">
+        <summary>API settings (optional)</summary>
+        <p class="ai-settings-help">Add an OpenAI-compatible API key to get smarter replies. The key stays only in this browser.</p>
+        <label class="ai-settings-label" for="ai-api-key">API key</label>
+        <input id="ai-api-key" class="ai-settings-input" type="password" placeholder="sk-…" autocomplete="off" />
+        <label class="ai-settings-label" for="ai-api-base">Base URL</label>
+        <input id="ai-api-base" class="ai-settings-input" type="url" placeholder="https://api.openai.com/v1" autocomplete="off" />
+        <label class="ai-settings-label" for="ai-api-model">Model</label>
+        <input id="ai-api-model" class="ai-settings-input" type="text" placeholder="gpt-4o-mini" autocomplete="off" />
+        <button type="button" id="ai-save-settings" class="btn btn-ghost ai-save-btn">Save settings</button>
+        <p id="ai-settings-status" class="ai-settings-status"></p>
+      </details>
+
+      <p class="ai-privacy-note">Without an API key, the assistant works offline on this device. With a key, only the message you send and a short note excerpt are shared with that provider.</p>
     </aside>
     <div id="ai-overlay" class="ai-overlay" hidden></div>
   </div>
