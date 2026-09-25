@@ -1,5 +1,5 @@
 /**
- * Mossdesk — iOS Notes-inspired shell + Lichen
+ * Mossdesk — iOS Notes-inspired shell + Lichen + touch microinteractions
  */
 (function () {
   "use strict";
@@ -88,16 +88,6 @@
         var p = JSON.parse(raw);
         if (Array.isArray(p)) return p;
       }
-      var v1 = localStorage.getItem("mossdesk-notes-v1");
-      if (v1) {
-        var old = JSON.parse(v1);
-        if (Array.isArray(old))
-          return old.map(function (n) {
-            return Object.assign({}, n, {
-              content: n.content ? "<p>" + escapeHtml(String(n.content)).replace(/\n/g, "<br>") + "</p>" : "",
-            });
-          });
-      }
       return [];
     } catch (e) {
       return [];
@@ -163,7 +153,6 @@
     });
   }
 
-  /* ---------- Views (animated push/pop) ---------- */
   var TRANSITION_MS = 400;
   var navigating = false;
 
@@ -179,7 +168,6 @@
     persistCurrent();
     activeId = null;
     renderHome();
-
     if (homeView) {
       homeView.hidden = false;
       homeView.classList.remove("is-leaving");
@@ -188,11 +176,9 @@
       editorView.classList.remove("is-visible");
       editorView.classList.add("is-leaving");
     }
-
     afterFrame(function () {
       if (homeView) homeView.classList.add("is-visible");
     });
-
     setTimeout(function () {
       if (editorView) {
         editorView.hidden = true;
@@ -207,13 +193,11 @@
     navigating = true;
     activeId = id;
     renderEditor();
-
     if (btnWrite) {
       btnWrite.classList.remove("pulse");
       void btnWrite.offsetWidth;
       btnWrite.classList.add("pulse");
     }
-
     if (editorView) {
       editorView.hidden = false;
       editorView.classList.remove("is-leaving");
@@ -222,11 +206,9 @@
       homeView.classList.remove("is-visible");
       homeView.classList.add("is-leaving");
     }
-
     afterFrame(function () {
       if (editorView) editorView.classList.add("is-visible");
     });
-
     setTimeout(function () {
       if (homeView) {
         homeView.hidden = true;
@@ -243,7 +225,6 @@
     var sorted = filtered.slice().sort(function (a, b) {
       return b.updatedAt - a.updatedAt;
     });
-
     if (sorted.length === 0) {
       if (homeEmpty) {
         homeEmpty.hidden = false;
@@ -255,7 +236,6 @@
       }
       return;
     }
-
     if (homeEmpty) {
       homeEmpty.hidden = true;
       homeEmpty.classList.remove("is-visible");
@@ -280,7 +260,6 @@
           );
         })
         .join("");
-
       homeList.querySelectorAll(".home-note").forEach(function (el) {
         el.addEventListener("click", function () {
           showEditor(el.dataset.id);
@@ -531,6 +510,7 @@
         insertHtmlIntoNote(text);
         btn.textContent = "✓";
         btn.disabled = true;
+        btn.classList.add("just-done");
       });
       actions.appendChild(btn);
       wrap.appendChild(actions);
@@ -562,7 +542,6 @@
       de: "Die Notiz ist noch leer.",
       fr: "La note est encore vide.",
     };
-
     if (act === "summarize" || /summar|resum/i.test(lower)) {
       if (!body) return empty[lang] || empty.pt;
       var s = (body.match(/[^.!?]+[.!?]+/g) || [body]).slice(0, 4).join(" ");
@@ -583,9 +562,7 @@
     }
     if (act === "improve" || /improv|melhor|mejor|verbess|amélior/i.test(lower)) {
       return lang === "pt"
-        ? "Sugestões: ideia clara no início; um parágrafo por pensamento; feche com próximo passo. (~" +
-            words +
-            " palavras)"
+        ? "Sugestões: ideia clara no início; um parágrafo por pensamento; feche com próximo passo. (~" + words + " palavras)"
         : "Lead with one idea; one thought per paragraph; end with a next step. (~" + words + " words)";
     }
     if (act === "outline" || /outline|estrut|esquema|glieder|plan/i.test(lower)) {
@@ -626,18 +603,11 @@
         messages: [
           {
             role: "system",
-            content:
-              "You are Lichen in Mossdesk. Reply in " + (langNames[getLichenLang()] || "Portuguese") + ". Be concise.",
+            content: "You are Lichen in Mossdesk. Reply in " + (langNames[getLichenLang()] || "Portuguese") + ". Be concise.",
           },
           {
             role: "user",
-            content:
-              "Title: " +
-              (ctx.title || "") +
-              "\nNote: " +
-              (ctx.body || "").slice(0, 3000) +
-              "\n\n" +
-              userText,
+            content: "Title: " + (ctx.title || "") + "\nNote: " + (ctx.body || "").slice(0, 3000) + "\n\n" + userText,
           },
         ],
         temperature: 0.6,
@@ -717,7 +687,64 @@
     localStorage.setItem(THEME_KEY, next);
   }
 
+  function bindTouchFeedback(root) {
+    root = root || document;
+    var selector = ".home-note, .pill-btn, .pill-tool, .home-fab, .ai-chip, .btn, .ai-insert-btn";
+    function pressOn(el) {
+      el.classList.add("is-pressed");
+    }
+    function pressOff(el) {
+      el.classList.remove("is-pressed");
+    }
+    root.addEventListener(
+      "pointerdown",
+      function (e) {
+        var el = e.target.closest(selector);
+        if (!el) return;
+        pressOn(el);
+        if (el.classList.contains("home-fab")) {
+          var rect = el.getBoundingClientRect();
+          var ripple = document.createElement("span");
+          ripple.className = "touch-ripple";
+          var size = Math.max(rect.width, rect.height);
+          ripple.style.width = ripple.style.height = size + "px";
+          ripple.style.left = e.clientX - rect.left - size / 2 + "px";
+          ripple.style.top = e.clientY - rect.top - size / 2 + "px";
+          el.appendChild(ripple);
+          setTimeout(function () {
+            if (ripple.parentNode) ripple.parentNode.removeChild(ripple);
+          }, 600);
+        }
+      },
+      { passive: true }
+    );
+    function clearPress(e) {
+      var el = e.target.closest(selector);
+      if (el) pressOff(el);
+      root.querySelectorAll(".is-pressed").forEach(function (n) {
+        pressOff(n);
+      });
+    }
+    root.addEventListener("pointerup", clearPress, { passive: true });
+    root.addEventListener("pointercancel", clearPress, { passive: true });
+    root.addEventListener("pointerleave", clearPress, { passive: true });
+  }
+
+  function syncFormatButtons() {
+    try {
+      if (btnBold) {
+        if (document.queryCommandState("bold")) btnBold.classList.add("is-on");
+        else btnBold.classList.remove("is-on");
+      }
+      if (btnItalic) {
+        if (document.queryCommandState("italic")) btnItalic.classList.add("is-on");
+        else btnItalic.classList.remove("is-on");
+      }
+    } catch (e) {}
+  }
+
   function bindEvents() {
+    bindTouchFeedback(document);
     if (btnWrite) btnWrite.addEventListener("click", createNote);
     if (btnBack) btnBack.addEventListener("click", showHome);
     if (btnDelete) btnDelete.addEventListener("click", deleteNote);
@@ -735,6 +762,9 @@
     if (contentEl) {
       contentEl.addEventListener("input", scheduleSave);
       contentEl.addEventListener("blur", persistCurrent);
+      contentEl.addEventListener("mouseup", syncFormatButtons);
+      contentEl.addEventListener("keyup", syncFormatButtons);
+      contentEl.addEventListener("touchend", syncFormatButtons);
     }
 
     if (fontSelect)
@@ -752,10 +782,12 @@
     if (btnBold)
       btnBold.addEventListener("click", function () {
         exec("bold");
+        syncFormatButtons();
       });
     if (btnItalic)
       btnItalic.addEventListener("click", function () {
         exec("italic");
+        syncFormatButtons();
       });
     if (btnMic) btnMic.addEventListener("click", toggleDictation);
 
