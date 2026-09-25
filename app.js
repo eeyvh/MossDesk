@@ -163,44 +163,79 @@
     });
   }
 
-  /* ---------- Views ---------- */
+  /* ---------- Views (animated push/pop) ---------- */
+  var TRANSITION_MS = 400;
+  var navigating = false;
+
+  function afterFrame(fn) {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(fn);
+    });
+  }
+
   function showHome() {
+    if (navigating) return;
+    navigating = true;
     persistCurrent();
     activeId = null;
-    if (editorView) {
-      editorView.classList.remove("is-visible");
-      setTimeout(function () {
-        editorView.hidden = true;
-      }, 280);
-    }
+    renderHome();
+
     if (homeView) {
       homeView.hidden = false;
-      requestAnimationFrame(function () {
-        homeView.classList.add("is-visible");
-      });
+      homeView.classList.remove("is-leaving");
     }
-    renderHome();
+    if (editorView) {
+      editorView.classList.remove("is-visible");
+      editorView.classList.add("is-leaving");
+    }
+
+    afterFrame(function () {
+      if (homeView) homeView.classList.add("is-visible");
+    });
+
+    setTimeout(function () {
+      if (editorView) {
+        editorView.hidden = true;
+        editorView.classList.remove("is-leaving");
+      }
+      navigating = false;
+    }, TRANSITION_MS);
   }
 
   function showEditor(id) {
+    if (navigating) return;
+    navigating = true;
     activeId = id;
-    if (homeView) {
-      homeView.classList.remove("is-visible");
-      setTimeout(function () {
-        homeView.hidden = true;
-      }, 200);
+    renderEditor();
+
+    if (btnWrite) {
+      btnWrite.classList.remove("pulse");
+      void btnWrite.offsetWidth;
+      btnWrite.classList.add("pulse");
     }
+
     if (editorView) {
       editorView.hidden = false;
-      requestAnimationFrame(function () {
-        editorView.classList.add("is-visible");
-      });
+      editorView.classList.remove("is-leaving");
     }
-    renderEditor();
+    if (homeView) {
+      homeView.classList.remove("is-visible");
+      homeView.classList.add("is-leaving");
+    }
+
+    afterFrame(function () {
+      if (editorView) editorView.classList.add("is-visible");
+    });
+
     setTimeout(function () {
+      if (homeView) {
+        homeView.hidden = true;
+        homeView.classList.remove("is-leaving");
+      }
+      navigating = false;
       if (titleInput && !titleInput.value) titleInput.focus();
       else if (contentEl) contentEl.focus();
-    }, 320);
+    }, TRANSITION_MS);
   }
 
   function renderHome() {
@@ -210,7 +245,10 @@
     });
 
     if (sorted.length === 0) {
-      if (homeEmpty) homeEmpty.hidden = false;
+      if (homeEmpty) {
+        homeEmpty.hidden = false;
+        homeEmpty.classList.add("is-visible");
+      }
       if (homeList) {
         homeList.hidden = true;
         homeList.innerHTML = "";
@@ -218,7 +256,10 @@
       return;
     }
 
-    if (homeEmpty) homeEmpty.hidden = true;
+    if (homeEmpty) {
+      homeEmpty.hidden = true;
+      homeEmpty.classList.remove("is-visible");
+    }
     if (homeList) {
       homeList.hidden = false;
       homeList.innerHTML = sorted
