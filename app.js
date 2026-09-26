@@ -1,5 +1,5 @@
 /**
- * Mossdesk — iOS Notes-inspired shell + Lichen + touch microinteractions
+ * Mossdesk — iOS Notes shell + desktop master-detail + Lichen
  */
 (function () {
   "use strict";
@@ -156,18 +156,58 @@
   var TRANSITION_MS = 400;
   var navigating = false;
 
+  function isDesktop() {
+    return window.matchMedia("(min-width: 801px)").matches;
+  }
+
   function afterFrame(fn) {
     requestAnimationFrame(function () {
       requestAnimationFrame(fn);
     });
   }
 
+  function setDesktopEmpty(empty) {
+    if (!editorView) return;
+    if (empty) editorView.classList.add("is-desktop-empty");
+    else editorView.classList.remove("is-desktop-empty");
+  }
+
+  function highlightActiveNote() {
+    if (!homeList) return;
+    homeList.querySelectorAll(".home-note").forEach(function (el) {
+      if (el.dataset.id === activeId) el.classList.add("is-active");
+      else el.classList.remove("is-active");
+    });
+  }
+
   function showHome() {
-    if (navigating) return;
-    navigating = true;
     persistCurrent();
     activeId = null;
     renderHome();
+    highlightActiveNote();
+
+    if (isDesktop()) {
+      if (homeView) {
+        homeView.hidden = false;
+        homeView.classList.add("is-visible");
+        homeView.classList.remove("is-leaving");
+      }
+      if (editorView) {
+        editorView.hidden = false;
+        editorView.classList.add("is-visible");
+        editorView.classList.remove("is-leaving");
+      }
+      setDesktopEmpty(true);
+      if (titleInput) titleInput.value = "";
+      if (contentEl) contentEl.innerHTML = "";
+      if (metaEl) metaEl.textContent = "";
+      if (btnDelete) btnDelete.disabled = true;
+      navigating = false;
+      return;
+    }
+
+    if (navigating) return;
+    navigating = true;
     if (homeView) {
       homeView.hidden = false;
       homeView.classList.remove("is-leaving");
@@ -189,10 +229,32 @@
   }
 
   function showEditor(id) {
-    if (navigating) return;
-    navigating = true;
     activeId = id;
     renderEditor();
+    highlightActiveNote();
+    setDesktopEmpty(false);
+
+    if (isDesktop()) {
+      if (homeView) {
+        homeView.hidden = false;
+        homeView.classList.add("is-visible");
+        homeView.classList.remove("is-leaving");
+      }
+      if (editorView) {
+        editorView.hidden = false;
+        editorView.classList.add("is-visible");
+        editorView.classList.remove("is-leaving");
+      }
+      navigating = false;
+      setTimeout(function () {
+        if (titleInput && !titleInput.value) titleInput.focus();
+        else if (contentEl) contentEl.focus();
+      }, 50);
+      return;
+    }
+
+    if (navigating) return;
+    navigating = true;
     if (btnWrite) {
       btnWrite.classList.remove("pulse");
       void btnWrite.offsetWidth;
@@ -265,6 +327,7 @@
           showEditor(el.dataset.id);
         });
       });
+      highlightActiveNote();
     }
   }
 
@@ -273,6 +336,14 @@
       return n.id === activeId;
     });
     if (!note) {
+      if (isDesktop()) {
+        setDesktopEmpty(true);
+        if (titleInput) titleInput.value = "";
+        if (contentEl) contentEl.innerHTML = "";
+        if (metaEl) metaEl.textContent = "";
+        if (btnDelete) btnDelete.disabled = true;
+        return;
+      }
       showHome();
       return;
     }
@@ -466,7 +537,7 @@
   function welcomeMessage() {
     var map = {
       pt: "Olá, eu sou o Lichen. Posso resumir, continuar ou melhorar sua nota.",
-      en: "Hi, I’m Lichen. I can summarize, continue, or improve your note.",
+      en: "Hi, I'm Lichen. I can summarize, continue, or improve your note.",
       es: "Hola, soy Lichen. Puedo resumir, continuar o mejorar tu nota.",
       de: "Hallo, ich bin Lichen. Ich kann zusammenfassen, fortsetzen oder verbessern.",
       fr: "Bonjour, je suis Lichen. Je peux résumer, continuer ou améliorer votre note.",
@@ -865,15 +936,44 @@
     notes = loadNotes();
     bindEvents();
 
-    if (homeView) {
-      homeView.hidden = false;
-      homeView.classList.add("is-visible");
-    }
-    if (editorView) {
-      editorView.hidden = true;
-      editorView.classList.remove("is-visible");
+    if (isDesktop()) {
+      if (homeView) {
+        homeView.hidden = false;
+        homeView.classList.add("is-visible");
+      }
+      if (editorView) {
+        editorView.hidden = false;
+        editorView.classList.add("is-visible");
+      }
+      setDesktopEmpty(true);
+      if (btnDelete) btnDelete.disabled = true;
+    } else {
+      if (homeView) {
+        homeView.hidden = false;
+        homeView.classList.add("is-visible");
+      }
+      if (editorView) {
+        editorView.hidden = true;
+        editorView.classList.remove("is-visible");
+      }
     }
     renderHome();
+
+    window.addEventListener("resize", function () {
+      if (isDesktop()) {
+        if (homeView) {
+          homeView.hidden = false;
+          homeView.classList.add("is-visible");
+          homeView.classList.remove("is-leaving");
+        }
+        if (editorView) {
+          editorView.hidden = false;
+          editorView.classList.add("is-visible");
+          editorView.classList.remove("is-leaving");
+        }
+        if (!activeId) setDesktopEmpty(true);
+      }
+    });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
